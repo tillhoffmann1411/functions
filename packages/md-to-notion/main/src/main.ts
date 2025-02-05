@@ -360,22 +360,26 @@ interface NotionBlock {
   }
   
   interface MainResponse {
+    body: {
+      error?: string;
+      blocks?: NotionBlock[];
+    };
     statusCode?: number;
     headers?: Record<string, string>;
-    error?: string;
-    body?: NotionBlock[];
   }
   
   function main(args: MainArgs): MainResponse {
     // Handle HTTP method
     if (args.__ow_method && args.__ow_method.toLowerCase() !== 'post') {
       return {
+        body: {
+          error: 'Method not allowed. Only POST requests are supported.'
+        },
         statusCode: 405,
         headers: {
           'Content-Type': 'application/json',
           'Allow': 'POST'
-        },
-        error: 'Method not allowed. Only POST requests are supported.'
+        }
       };
     }
 
@@ -383,22 +387,26 @@ interface NotionBlock {
     const contentType = args.__ow_headers?.['content-type'] || '';
     if (contentType && !contentType.includes('application/json')) {
       return {
+        body: {
+          error: 'Unsupported Media Type. Please send request with application/json content type.'
+        },
         statusCode: 415,
         headers: {
           'Content-Type': 'application/json'
-        },
-        error: 'Unsupported Media Type. Please send request with application/json content type.'
+        }
       };
     }
 
     // Check for markdown content
     if (!args.md) {
       return {
+        body: {
+          error: 'Bad Request: No markdown content provided in the request body.'
+        },
         statusCode: 400,
         headers: {
           'Content-Type': 'application/json'
-        },
-        error: 'Bad Request: No markdown content provided in the request body.'
+        }
       };
     }
 
@@ -407,19 +415,23 @@ interface NotionBlock {
       const blocks = converter.parseMarkdown(args.md);
       
       return {
+        body: {
+          blocks
+        },
         statusCode: 200,
         headers: {
           'Content-Type': 'application/json'
-        },
-        body: blocks
+        }
       };
     } catch (error) {
       return {
+        body: {
+          error: `Internal Server Error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`
+        },
         statusCode: 500,
         headers: {
           'Content-Type': 'application/json'
-        },
-        error: `Internal Server Error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`
+        }
       };
     }
   }
