@@ -372,7 +372,7 @@ interface NotionBlock {
     if (args.__ow_method && args.__ow_method.toLowerCase() !== 'post') {
       return {
         body: {
-          error: 'Method not allowed. Only POST requests are supported.'
+          error: 'Method not allowed. Only POST requests are supported. With a body containing markdown in a "md" field. example: {"md": "## Hello World"}'
         },
         statusCode: 405,
         headers: {
@@ -387,7 +387,7 @@ interface NotionBlock {
     if (contentType && !contentType.includes('application/json')) {
       return {
         body: {
-          error: 'Unsupported Media Type. Please send request with application/json content type.'
+          error: 'Unsupported Media Type. Please send request with application/json content type. With a body containing markdown in a "md" field. example: {"md": "## Hello World"}'
         },
         statusCode: 415,
         headers: {
@@ -400,7 +400,7 @@ interface NotionBlock {
     if (!args.md) {
       return {
         body: {
-          error: 'Bad Request: No markdown content provided in the request body.'
+          error: 'Bad Request: No markdown content provided in the request body. With a body containing markdown in a "md" field. example: {"md": "## Hello World"}'
         },
         statusCode: 400,
         headers: {
