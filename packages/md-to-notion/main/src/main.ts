@@ -362,6 +362,7 @@ interface NotionBlock {
   interface MainResponse {
     body: {
       error?: string;
+      children?: NotionBlock[];
     } | NotionBlock[];
     statusCode?: number;
     headers?: Record<string, string>;
@@ -414,7 +415,9 @@ interface NotionBlock {
       const blocks = converter.parseMarkdown(args.md);
       
       return {
-        body: blocks,
+        body: {
+          children: blocks
+        },
         statusCode: 200,
         headers: {
           'Content-Type': 'application/json'
