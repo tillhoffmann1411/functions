@@ -44,7 +44,7 @@ interface NotionBlock {
   };
   
   class NotionBlockConverter {
-    private blockConverters: Record<string, (text: string | string[]) => NotionBlock | NotionBlock[]>;
+    private blockConverters: Record<string, (text: string | string[], ...args: any[]) => NotionBlock | NotionBlock[]>;
   
     constructor() {
       this.blockConverters = {
@@ -60,6 +60,7 @@ interface NotionBlock {
         code: (code: string | string[], language?: string) => this.createCodeBlock(code as string, language as string),
         quote: (text: string | string[]) => this.createQuote(text as string),
         divider: () => this.createDivider(),
+        todo: (text: string | string[], checked: boolean) => this.createTodo(text as string, checked),
       };
     }
   
@@ -217,6 +218,13 @@ interface NotionBlock {
       return createBlock("divider", {});
     }
   
+    createTodo(text: string, checked: boolean): NotionBlock {
+      return createBlock("to_do", {
+        rich_text: this.parseInlineStyles(text),
+        checked
+      });
+    }
+  
     createSpace(count: number = 1): NotionBlock[] {
       return Array(count).fill(
         createBlock("paragraph", {
@@ -243,6 +251,20 @@ interface NotionBlock {
         
         // Skip empty lines completely
         if (!line) continue;
+  
+        // Check for todo items first
+        const todoMatch = line.match(/^[-*]\s*\[([ x])\]\s*(.+)$/i);
+        if (todoMatch) {
+          if (isInList) {
+            blocks.push(...this.blockConverters[listType!].call(this, currentList));
+            currentList = [];
+            isInList = false;
+          }
+          const checked = todoMatch[1].toLowerCase() === 'x';
+          const text = todoMatch[2];
+          blocks.push(this.createTodo(text, checked));
+          continue;
+        }
   
         // Headers
         if (line.startsWith('# ')) {
